@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shot List</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2319180f'/%3E%3Crect x='2' y='2' width='6' height='28' rx='1' fill='%232a271d'/%3E%3Crect x='24' y='2' width='6' height='28' rx='1' fill='%232a271d'/%3E%3Crect x='3.5' y='5' width='3' height='3' rx='0.5' fill='%2319180f'/%3E%3Crect x='3.5' y='14.5' width='3' height='3' rx='0.5' fill='%2319180f'/%3E%3Crect x='3.5' y='24' width='3' height='3' rx='0.5' fill='%2319180f'/%3E%3Crect x='25.5' y='5' width='3' height='3' rx='0.5' fill='%2319180f'/%3E%3Crect x='25.5' y='14.5' width='3' height='3' rx='0.5' fill='%2319180f'/%3E%3Crect x='25.5' y='24' width='3' height='3' rx='0.5' fill='%2319180f'/%3E%3Crect x='10' y='4' width='12' height='24' rx='2' fill='%23d62828'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #121210;
+    --bg-elevated: #19180f;
+    --surface: #211f18;
+    --surface-hover: #2a271d;
+    --accent: #d62828;
+    --accent-dim: #5c1414;
+    --text: #f3f1ea;
+    --text-dim: #a29c8c;
+    --text-faint: #625d4f;
+    --border: #34302334;
+    --border-strong: #3a362a;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, sans-serif;
+    min-height:100vh;
+    padding: 28px 20px 80px;
+  }
+  .wrap{ max-width: 980px; margin: 0 auto; }
+
+  /* header */
+  header{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap: 16px;
+    margin-bottom: 22px;
+    flex-wrap: wrap;
+  }
+  .title{
+    font-family:'Oswald', sans-serif;
+    font-weight:700;
+    font-size: 30px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text);
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .title .dot{
+    width:12px;height:12px;border-radius:50%;
+    background: var(--accent);
+    box-shadow: 0 0 10px var(--accent);
+  }
+  .stats{
+    font-family:'Oswald', sans-serif;
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+  .stats b{ color: var(--text); font-weight:600; }
+
+  /* sprocket strip */
+  .sprockets{
+    display:flex;
+    gap: 7px;
+    padding: 9px 4px;
+    overflow:hidden;
+  }
+  .sprockets span{
+    width:9px; height:14px;
+    border-radius:2px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-strong);
+    flex-shrink:0;
+  }
+
+  /* grid */
+  .grid{
+    display:grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px,1fr));
+    gap: 12px;
+    margin-bottom: 6px;
+  }
+
+  .tile{
+    position:relative;
+    aspect-ratio: 3/4;
+    border-radius: 6px;
+    overflow:hidden;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    cursor:pointer;
+    transition: transform .15s ease, border-color .15s ease;
+  }
+  .tile:hover{ border-color: var(--text-faint); }
+  .tile img{
+    width:100%; height:100%; object-fit:cover; display:block;
+  }
+  .tile .label{
+    position:absolute; left:0; right:0; bottom:0;
+    padding: 18px 10px 8px;
+    background: linear-gradient(to top, rgba(0,0,0,.85), transparent);
+    font-family:'Oswald', sans-serif;
+    font-size: 13px;
+    letter-spacing:.02em;
+    color: #fff;
+    line-height:1.25;
+  }
+  .tile .rec{
+    position:absolute; top:8px; right:8px;
+    width:26px; height:26px;
+    border-radius:50%;
+    border: 2px solid rgba(255,255,255,.8);
+    background: rgba(0,0,0,.35);
+    backdrop-filter: blur(2px);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .tile .rec::after{
+    content:'';
+    width:11px; height:11px;
+    border-radius:50%;
+    background: transparent;
+    transition: background .12s ease;
+  }
+  .tile:hover .rec::after{ background: rgba(214,40,40,.5); }
+  .tile .del{
+    position:absolute; top:8px; left:8px;
+    width:22px; height:22px;
+    border-radius:50%;
+    background: rgba(0,0,0,.45);
+    color: rgba(255,255,255,.7);
+    display:flex; align-items:center; justify-content:center;
+    font-size: 13px;
+    opacity:0;
+    transition: opacity .12s ease;
+  }
+  .tile:hover .del{ opacity:1; }
+  .tile .del:hover{ color:#fff; background: rgba(0,0,0,.7); }
+  .tile .no-label{ color: var(--text-faint); font-style:italic; }
+
+  /* add card */
+  .add-card{
+    aspect-ratio: 3/4;
+    border-radius: 6px;
+    border: 1.5px dashed var(--border-strong);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:8px;
+    cursor:pointer;
+    color: var(--text-faint);
+    text-align:center;
+    padding: 10px;
+    transition: border-color .15s ease, color .15s ease, background .15s ease;
+  }
+  .add-card:hover, .add-card.drag{
+    border-color: var(--accent);
+    color: var(--text-dim);
+    background: rgba(214,40,40,.04);
+  }
+  .add-card .plus{
+    font-family:'Oswald', sans-serif;
+    font-size: 30px;
+    line-height:1;
+  }
+  .add-card .hint{
+    font-size: 11px;
+    letter-spacing:.04em;
+    line-height:1.5;
+  }
+  .add-card kbd{
+    font-family: ui-monospace, monospace;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-strong);
+    border-radius:3px;
+    padding:1px 5px;
+    font-size:10px;
+  }
+
+  /* staged (pending) add tile */
+  .staged{
+    aspect-ratio: 3/4;
+    border-radius: 6px;
+    overflow:hidden;
+    background: var(--surface);
+    border: 1.5px solid var(--accent);
+    display:flex; flex-direction:column;
+    position:relative;
+  }
+  .staged img{ width:100%; flex:1; object-fit:cover; display:block; }
+  .staged form{ display:flex; flex-direction:column; }
+  .staged input{
+    width:100%;
+    background: var(--bg-elevated);
+    border:none;
+    border-top: 1px solid var(--border-strong);
+    color: var(--text);
+    font-family:'Inter', sans-serif;
+    font-size: 13px;
+    padding: 9px 10px;
+    outline:none;
+  }
+  .staged input::placeholder{ color: var(--text-faint); }
+  .staged .staged-actions{
+    display:flex;
+  }
+  .staged .staged-actions button{
+    flex:1;
+    border:none;
+    padding: 8px 0;
+    font-family:'Oswald', sans-serif;
+    font-size: 12px;
+    letter-spacing:.05em;
+    text-transform:uppercase;
+    cursor:pointer;
+  }
+  .staged .confirm{ background: var(--accent); color:#fff; }
+  .staged .confirm:hover{ background: #b81f1f; }
+  .staged .cancel{ background: var(--bg-elevated); color: var(--text-dim); }
+  .staged .cancel:hover{ color: var(--text); }
+
+  /* empty state */
+  .empty{
+    grid-column: 1/-1;
+    text-align:center;
+    color: var(--text-faint);
+    font-size: 13px;
+    padding: 30px 10px;
+  }
+
+  /* done section */
+  .done-section{ margin-top: 30px; }
+  .done-toggle{
+    display:flex; align-items:center; gap:10px;
+    background:none; border:none; cursor:pointer;
+    color: var(--text-dim);
+    font-family:'Oswald', sans-serif;
+    font-size: 13px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    padding: 8px 0;
+  }
+  .done-toggle .chev{
+    display:inline-block;
+    transition: transform .15s ease;
+    color: var(--text-faint);
+  }
+  .done-toggle.open .chev{ transform: rotate(90deg); }
+  .done-strip{
+    display:none;
+    grid-template-columns: repeat(auto-fill, minmax(90px,1fr));
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .done-strip.open{ display:grid; }
+  .done-tile{
+    position:relative;
+    aspect-ratio: 3/4;
+    border-radius:5px;
+    overflow:hidden;
+    cursor:pointer;
+    border: 1px solid var(--border-strong);
+  }
+  .done-tile img{
+    width:100%; height:100%; object-fit:cover; display:block;
+    filter: grayscale(65%) brightness(.55);
+    transition: filter .15s ease;
+  }
+  .done-tile:hover img{ filter: grayscale(20%) brightness(.75); }
+  .done-tile .check{
+    position:absolute; top:5px; right:5px;
+    width:18px;height:18px;border-radius:50%;
+    background: var(--accent);
+    display:flex; align-items:center; justify-content:center;
+    font-size: 10px; color:#fff; font-weight:700;
+  }
+  .done-tile .del{
+    position:absolute; left:0; right:0; bottom:0;
+    padding: 5px 0 4px;
+    background: rgba(0,0,0,.72);
+    color: rgba(255,255,255,.85);
+    display:flex; align-items:center; justify-content:center;
+    gap:4px;
+    font-family:'Inter', sans-serif;
+    font-size: 10px;
+    letter-spacing:.02em;
+    opacity:0;
+    transform: translateY(100%);
+    transition: opacity .12s ease, transform .12s ease;
+  }
+  .done-tile:hover .del{ opacity:1; transform: translateY(0); }
+  .done-tile .del:hover{ background: var(--accent-dim); color:#fff; }
+
+  .status{
+    position: fixed;
+    bottom: 16px; left:50%; transform: translateX(-50%);
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    color: var(--text-dim);
+    font-size: 12px;
+    padding: 7px 14px;
+    border-radius: 20px;
+    opacity:0;
+    transition: opacity .3s ease;
+    pointer-events:none;
+    font-family:'Inter', sans-serif;
+  }
+  .status.show{ opacity:1; }
+
+  input[type=file]{ display:none; }
+
+  /* lightbox */
+  .lightbox{
+    display:none;
+    position: fixed; inset:0;
+    background: rgba(8,7,5,.92);
+    z-index: 100;
+    align-items:center; justify-content:center;
+    flex-direction:column;
+    padding: 40px 20px;
+  }
+  .lightbox.open{ display:flex; }
+  .lightbox img{
+    max-width: 92vw;
+    max-height: 74vh;
+    object-fit: contain;
+    border-radius: 6px;
+    border: 1px solid var(--border-strong);
+  }
+  .lb-close{
+    position:absolute; top:18px; right:22px;
+    width:38px; height:38px;
+    border-radius:50%;
+    border: 1px solid var(--border-strong);
+    background: var(--surface);
+    color: var(--text-dim);
+    font-size:16px;
+    cursor:pointer;
+  }
+  .lb-close:hover{ color:#fff; border-color: var(--text-faint); }
+  .lb-bar{
+    margin-top: 18px;
+    display:flex;
+    align-items:center;
+    gap: 12px;
+    max-width: 92vw;
+    width: 420px;
+  }
+  .lb-label{
+    flex:1;
+    font-family:'Oswald', sans-serif;
+    font-size: 15px;
+    letter-spacing:.02em;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: 20px;
+    padding: 10px 16px;
+    outline:none;
+  }
+  .lb-label::placeholder{
+    color: var(--text-faint);
+    font-style: italic;
+  }
+  .lb-label:focus{ border-color: var(--text-faint); }
+  .lb-rec{
+    font-family:'Oswald', sans-serif;
+    font-size: 12px;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    background: var(--accent);
+    color:#fff;
+    border:none;
+    border-radius: 20px;
+    padding: 9px 18px;
+    cursor:pointer;
+    flex-shrink:0;
+  }
+  .lb-rec:hover{ background:#b81f1f; }
+
+  @media (max-width: 480px){
+    .title{ font-size: 24px; }
+    .grid{ grid-template-columns: repeat(auto-fill, minmax(120px,1fr)); }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="title"><span class="dot"></span>Shot List</div>
+    <div class="stats"><b id="toShootCount">0</b> to shoot &nbsp;·&nbsp; <b id="doneCount">0</b> recorded</div>
+  </header>
+
+  <div class="sprockets" id="sprocketsTop"></div>
+
+  <div class="grid" id="grid"></div>
+
+  <div class="sprockets" id="sprocketsBottom"></div>
+
+  <div class="done-section" id="doneSection" style="display:none;">
+    <button class="done-toggle" id="doneToggle">
+      <span class="chev">&#9656;</span>
+      <span id="doneToggleLabel">Recorded (0)</span>
+    </button>
+    <div class="done-strip" id="doneStrip"></div>
+  </div>
+</div>
+
+<input type="file" id="fileInput" accept="image/*" multiple>
+<div class="status" id="status">Saved</div>
+
+<div class="lightbox" id="lightbox">
+  <button class="lb-close" id="lbClose" title="Close">&#10005;</button>
+  <img id="lbImg" src="" alt="Full size shot">
+  <div class="lb-bar">
+    <input type="text" class="lb-label" id="lbLabel" placeholder="Untitled shot — e.g. close up, medium shot, long shot">
+    <button class="lb-rec" id="lbRec">Mark as recorded</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  const grid = document.getElementById('grid');
+  const doneSection = document.getElementById('doneSection');
+  const doneStrip = document.getElementById('doneStrip');
+  const doneToggle = document.getElementById('doneToggle');
+  const doneToggleLabel = document.getElementById('doneToggleLabel');
+  const toShootCount = document.getElementById('toShootCount');
+  const doneCount = document.getElementById('doneCount');
+  const fileInput = document.getElementById('fileInput');
+  const statusEl = document.getElementById('status');
+  const lightbox = document.getElementById('lightbox');
+  const lbImg = document.getElementById('lbImg');
+  const lbLabel = document.getElementById('lbLabel');
+  const lbRec = document.getElementById('lbRec');
+  const lbClose = document.getElementById('lbClose');
+
+  let shots = [];       // {id, label, img, done}
+  let staged = null;    // {img} pending confirmation
+  let doneOpen = false;
+  let lightboxId = null;
+  let storageOk = true;
+
+  function uid(){ return 'shot_' + Date.now() + '_' + Math.random().toString(36).slice(2,8); }
+
+  function showStatus(text){
+    statusEl.textContent = text;
+    statusEl.classList.add('show');
+    clearTimeout(showStatus._t);
+    showStatus._t = setTimeout(()=> statusEl.classList.remove('show'), 1400);
+  }
+
+  function save(){
+    try{
+      localStorage.setItem('shot-list-data', JSON.stringify(shots));
+    }catch(e){
+      storageOk = false;
+      console.error('save failed', e);
+      showStatus('Storage full — try removing some shots');
+    }
+  }
+
+  function load(){
+    try{
+      const raw = localStorage.getItem('shot-list-data');
+      if(raw){ shots = JSON.parse(raw); }
+    }catch(e){
+      shots = [];
+    }
+    render();
+  }
+
+  function resizeImage(dataUrl, maxDim){
+    return new Promise((resolve, reject)=>{
+      const img = new Image();
+      img.onload = () => {
+        let {width, height} = img;
+        if(width > height && width > maxDim){
+          height = Math.round(height * (maxDim/width));
+          width = maxDim;
+        } else if(height > maxDim){
+          width = Math.round(width * (maxDim/height));
+          height = maxDim;
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', 0.78));
+      };
+      img.onerror = reject;
+      img.src = dataUrl;
+    });
+  }
+
+  function fileToDataUrl(file){
+    return new Promise((resolve, reject)=>{
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // Same image already in the list (undone or recorded)? Compares the encoded image data itself.
+  function isDuplicate(dataUrl){
+    return shots.some(s => s.img === dataUrl);
+  }
+
+  async function stageImage(file){
+    try{
+      const raw = await fileToDataUrl(file);
+      const resized = await resizeImage(raw, 1100);
+      if(isDuplicate(resized)){
+        showStatus('Already in your list — skipped');
+        return;
+      }
+      staged = { img: resized };
+      render();
+    }catch(e){
+      console.error(e);
+      showStatus('Could not read image');
+    }
+  }
+
+  // Multiple files at once: skip the label step, add each straight to the grid as its own tile.
+  async function addManyFiles(files){
+    const imageFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
+    if(imageFiles.length === 0) return;
+    let added = 0;
+    let skipped = 0;
+    for(const file of imageFiles){
+      try{
+        const raw = await fileToDataUrl(file);
+        const resized = await resizeImage(raw, 1100);
+        if(isDuplicate(resized)){
+          skipped++;
+          continue;
+        }
+        shots.unshift({ id: uid(), label:'', img: resized, done:false });
+        added++;
+      }catch(e){
+        console.error(e);
+      }
+    }
+    if(added > 0) save();
+    render();
+    if(added === 0 && skipped > 0){
+      showStatus(skipped === 1 ? 'Already in your list' : `All ${skipped} already in your list`);
+    } else if(skipped > 0){
+      showStatus(`${added} added, ${skipped} already in list`);
+    } else {
+      showStatus(added === 1 ? 'Shot added' : `${added} shots added`);
+    }
+  }
+
+  function render(){
+    // stats
+    const undone = shots.filter(s=>!s.done);
+    const done = shots.filter(s=>s.done);
+    toShootCount.textContent = undone.length;
+    doneCount.textContent = done.length;
+
+    // grid
+    grid.innerHTML = '';
+
+    if(staged){
+      const card = document.createElement('div');
+      card.className = 'staged';
+      card.innerHTML = `
+        <img src="${staged.img}" alt="pending shot">
+        <form>
+          <input type="text" id="stagedLabel" placeholder="Shot description (optional)" autofocus>
+          <div class="staged-actions">
+            <button type="button" class="cancel">Cancel</button>
+            <button type="submit" class="confirm">Add shot</button>
+          </div>
+        </form>
+      `;
+      grid.appendChild(card);
+      const form = card.querySelector('form');
+      const cancelBtn = card.querySelector('.cancel');
+      const labelInput = card.querySelector('#stagedLabel');
+      setTimeout(()=> labelInput.focus(), 30);
+      form.addEventListener('submit', (e)=>{
+        e.preventDefault();
+        addShot(labelInput.value.trim(), staged.img);
+        staged = null;
+        render();
+      });
+      cancelBtn.addEventListener('click', ()=>{
+        staged = null;
+        render();
+      });
+    }
+
+    // add card (always present, at start if nothing staged, otherwise after)
+    const addCard = document.createElement('div');
+    addCard.className = 'add-card';
+    addCard.id = 'addCard';
+    addCard.innerHTML = `
+      <div class="plus">+</div>
+      <div class="hint">Click to upload (multiple OK)<br>or paste with <kbd>Ctrl</kbd>+<kbd>V</kbd></div>
+    `;
+    addCard.addEventListener('click', ()=> fileInput.click());
+    addCard.addEventListener('dragover', (e)=>{ e.preventDefault(); addCard.classList.add('drag'); });
+    addCard.addEventListener('dragleave', ()=> addCard.classList.remove('drag'));
+    addCard.addEventListener('drop', (e)=>{
+      e.preventDefault();
+      addCard.classList.remove('drag');
+      const files = e.dataTransfer.files;
+      if(!files || files.length === 0) return;
+      if(files.length === 1){
+        stageImage(files[0]);
+      } else {
+        addManyFiles(files);
+      }
+    });
+    grid.appendChild(addCard);
+
+    if(undone.length === 0 && !staged){
+      const empty = document.createElement('div');
+      empty.className = 'empty';
+      empty.textContent = 'No shots queued yet — paste or upload a reference image to start your list.';
+      grid.appendChild(empty);
+    }
+
+    undone.forEach(s=>{
+      const tile = document.createElement('div');
+      tile.className = 'tile';
+      tile.innerHTML = `
+        <img src="${s.img}" alt="${s.label || 'shot'}">
+        <div class="del" data-id="${s.id}">&#10005;</div>
+        <div class="rec" data-id="${s.id}" title="Mark as recorded"></div>
+        <div class="label">${s.label ? s.label : '<span class="no-label">Untitled shot</span>'}</div>
+      `;
+      grid.appendChild(tile);
+    });
+
+    grid.querySelectorAll('.rec').forEach(el=>{
+      el.addEventListener('click', (e)=>{ e.stopPropagation(); toggleDone(el.dataset.id, true); });
+    });
+    grid.querySelectorAll('.tile').forEach(tileEl=>{
+      const del = tileEl.querySelector('.del');
+      tileEl.addEventListener('click', ()=>{
+        openLightbox(del.dataset.id);
+      });
+    });
+    grid.querySelectorAll('.del').forEach(el=>{
+      el.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        removeShot(el.dataset.id);
+      });
+    });
+
+    // done section
+    if(shots.length > 0){
+      doneSection.style.display = '';
+    } else {
+      doneSection.style.display = 'none';
+    }
+    doneToggleLabel.textContent = `Recorded (${done.length})`;
+    doneStrip.innerHTML = '';
+    done.forEach(s=>{
+      const t = document.createElement('div');
+      t.className = 'done-tile';
+      t.innerHTML = `
+        <img src="${s.img}" alt="${s.label || 'shot'}">
+        <div class="check">&#10003;</div>
+        <div class="del" data-id="${s.id}" title="Delete permanently">&#128465; Delete</div>
+      `;
+      t.addEventListener('click', (ev)=>{
+        if(ev.target.closest('.del')) return;
+        toggleDone(s.id, false);
+      });
+      t.querySelector('.del').addEventListener('click', (e)=>{
+        e.stopPropagation();
+        const label = s.label ? `"${s.label}"` : 'this shot';
+        if(!confirm(`Permanently delete ${label}? This can't be undone.`)) return;
+        removeShot(s.id);
+      });
+      doneStrip.appendChild(t);
+    });
+
+    // sprockets width fill
+    fillSprockets();
+  }
+
+  function fillSprockets(){
+    ['sprocketsTop','sprocketsBottom'].forEach(id=>{
+      const el = document.getElementById(id);
+      const count = Math.max(20, Math.floor(el.clientWidth / 16));
+      el.innerHTML = '';
+      for(let i=0;i<count;i++){
+        const s = document.createElement('span');
+        el.appendChild(s);
+      }
+    });
+  }
+
+  function addShot(label, img){
+    shots.unshift({ id: uid(), label, img, done:false });
+    save();
+    showStatus('Shot added');
+  }
+
+  function toggleDone(id, val){
+    const s = shots.find(x=>x.id===id);
+    if(!s) return;
+    s.done = val;
+    save();
+    render();
+    showStatus(val ? 'Marked recorded' : 'Back to shoot list');
+  }
+
+  function removeShot(id){
+    shots = shots.filter(x=>x.id!==id);
+    save();
+    render();
+    showStatus('Shot removed');
+  }
+
+  function openLightbox(id){
+    const s = shots.find(x=>x.id===id);
+    if(!s) return;
+    lightboxId = id;
+    lbImg.src = s.img;
+    lbLabel.value = s.label || '';
+    lightbox.classList.add('open');
+  }
+
+  function closeLightbox(){
+    lightbox.classList.remove('open');
+    lightboxId = null;
+    lbImg.src = '';
+  }
+
+  function saveLightboxLabel(){
+    if(!lightboxId) return;
+    const s = shots.find(x=>x.id===lightboxId);
+    if(!s) return;
+    const newLabel = lbLabel.value.trim();
+    if(s.label === newLabel) return;
+    s.label = newLabel;
+    save();
+    // update just this tile's label text in place, no full re-render (keeps lightbox open uninterrupted)
+    const tileLabel = grid.querySelector(`.rec[data-id="${s.id}"]`)?.closest('.tile')?.querySelector('.label');
+    if(tileLabel){
+      tileLabel.innerHTML = s.label ? s.label : '<span class="no-label">Untitled shot</span>';
+    }
+  }
+
+  lbClose.addEventListener('click', ()=>{ saveLightboxLabel(); closeLightbox(); });
+  lightbox.addEventListener('click', (e)=>{
+    if(e.target === lightbox){ saveLightboxLabel(); closeLightbox(); }
+  });
+  document.addEventListener('keydown', (e)=>{
+    if(e.key === 'Escape' && lightbox.classList.contains('open')){ saveLightboxLabel(); closeLightbox(); }
+  });
+  lbLabel.addEventListener('blur', saveLightboxLabel);
+  lbLabel.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter'){ e.preventDefault(); lbLabel.blur(); }
+  });
+  lbRec.addEventListener('click', ()=>{
+    if(!lightboxId) return;
+    saveLightboxLabel();
+    toggleDone(lightboxId, true);
+    closeLightbox();
+  });
+
+  doneToggle.addEventListener('click', ()=>{
+    doneOpen = !doneOpen;
+    doneToggle.classList.toggle('open', doneOpen);
+    doneStrip.classList.toggle('open', doneOpen);
+  });
+
+  fileInput.addEventListener('change', (e)=>{
+    const files = e.target.files;
+    if(!files || files.length === 0) return;
+    if(files.length === 1){
+      stageImage(files[0]);
+    } else {
+      addManyFiles(files);
+    }
+    fileInput.value = '';
+  });
+
+  document.addEventListener('paste', (e)=>{
+    const items = e.clipboardData && e.clipboardData.items;
+    if(!items) return;
+    for(const item of items){
+      if(item.type.startsWith('image/')){
+        const file = item.getAsFile();
+        if(file){ stageImage(file); e.preventDefault(); break; }
+      }
+    }
+  });
+
+  window.addEventListener('resize', fillSprockets);
+
+  load();
+})();
+</script>
+</body>
+</html>
